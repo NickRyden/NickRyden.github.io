@@ -42,6 +42,7 @@ section {
 	display: flex;
 	background: rgb(128,128,128);
 	width: 100vw;
+	max-width: 100vw;
 	padding: 30px 0px;
 }
 
@@ -54,6 +55,7 @@ section {
 table {
 	display: none;
 	border-collapse: collapse;
+	max-width: 95%;
 }
 
 td, th { padding: 3px 20px; }
@@ -67,7 +69,7 @@ th {
 tr:nth-child(even) {background: rgb(138,138,138)}
 tr:nth-child(odd) {background: rgb(118,118,118)}
 
-table td:nth-child(2), table td:nth-child(3) {
+table td:nth-child(2), table td:nth-child(3), table td:nth-child(4) {
 	text-align: center;
 }
 
@@ -92,7 +94,7 @@ h2 { font-size: 1.8rem; }
 h3 { font-size: 1.4rem; }
 span { font-size: 1.0rem; }
 
-.txt-main {
+span {
 	width: 45%;
 	text-align: center;
 }
@@ -109,6 +111,38 @@ a { color: var(--light); }
 .mono {
 	font-family: 'Roboto', monospace;
 }
+
+@media only screen and (hover: none) and (pointer: coarse) {
+	table {
+		display: none;
+		border-collapse: collapse;
+		max-width: 100%;
+		font-size: 0.95rem;
+	}
+
+	td, th { padding: 3px 6px; }
+
+	span {
+		width: 95%;
+		text-align: center;
+	}
+}
+
+@media (max-width:961px)  {
+	table {
+		display: none;
+		border-collapse: collapse;
+		max-width: 100%;
+		font-size: 0.95rem;
+	}
+
+	td, th { padding: 3px 6px; }
+
+	span {
+		width: 95%;
+		text-align: center;
+	}
+}
 </style>
 
 
@@ -123,7 +157,7 @@ a { color: var(--light); }
 	<span class="note">NOTE: You can sort by clicking on the table's headings. Its not a perfect system, but it's something!</span><br />
 	<span>FUN FACT: This uses a mathematics formula called 'Euclidean Distance' to determine the closeness between colors.</span><br />
 
-	<span>You can use an Online Color Picker (like this one <a href="https://imagecolorpicker.com/en">here</a>) if you're unsure how to pick colours.</span><br />
+	<span>You can use an Online Color Picker (like this one <a href="https://imagecolorpicker.com/en" target="_blank">here</a>) if you're unsure how to pick colours.</span><br />
 
 	<h3>Search with hex</h3>
 	<span>(e.g. #FFFFFF)</span><br />
@@ -137,7 +171,7 @@ a { color: var(--light); }
 			<th id="hex-val">Hex value</th>
 			<th id="euc-dist">Distance</th>
 			<th id="color">Color</th>
-			<th id="color">Comparator</th>
+			<th id="color">Compare</th>
 		</tr>
 	</thead>
 
@@ -145,8 +179,8 @@ a { color: var(--light); }
 	</tbody>
 </table>
 	<h3>Sources</h3>
-	<a href="https://redgrimm.github.io/paint-conversion/">Redgrimm on Github.io</a><br />
-	<a href="https://handwiki.org/wiki/List_of_Citadel_paints">Hand Wiki</a><br />
+	<a href="https://redgrimm.github.io/paint-conversion/">Redgrimm on Github.io</a>
+	<a href="https://handwiki.org/wiki/List_of_Citadel_paints">Hand Wiki</a>
 </section>
 
 </body>
@@ -690,3 +724,4 @@ function getCellValue(row, index){ return $(row).children('td').eq(index).text()
 </script>
 
 </html>
+
