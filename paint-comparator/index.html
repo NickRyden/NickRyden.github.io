@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>UX Test</title>
+
+	<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+	<script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400&display=swap" rel="stylesheet">
+
+<style>
+* {
+	--dark: #333;
+	--light: rgb(242,242,247);
+	--color: #008888;
+	transition: 0.5s;
+}
+
+::selection {
+	background: var(--color);
+	color: var(--light);
+}
+
+body {
+	padding: 0px;
+	margin: 0px;
+	color: var(--light);
+	font-family: 'Roboto', sans serif;
+	font-weight: 300;
+	overflow-x: hidden;
+	background: rgb(128,128,128);
+}
+
+section {
+	display: flex;
+	background: rgb(128,128,128);
+	width: 100vw;
+	padding: 30px 0px;
+}
+
+#input-col {
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+}
+
+table {
+	display: none;
+	border-collapse: collapse;
+}
+
+td, th { padding: 3px 20px; }
+
+th {
+	background: #444;
+	font-weight: 400;
+	border-bottom: 1px solid #FFF;
+}
+
+tr:nth-child(even) {background: rgb(138,138,138)}
+tr:nth-child(odd) {background: rgb(118,118,118)}
+
+table td:nth-child(2), table td:nth-child(3) {
+	text-align: center;
+}
+
+input[type=text] {
+	text-align: center;
+	padding: 8px 15px;
+	border-radius: 5px;
+	outline: none;
+	border: 1px solid #444;
+}
+
+span, h1, h2, h3 { font-weight: 400; }
+
+h1, h2, h3 {
+	padding: 0px;
+	margin: 0px;
+	font-weight: 400;
+}
+
+h1 { font-size: 2.2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.4rem; }
+span { font-size: 1.0rem; }
+
+.txt-main {
+	width: 45%;
+	text-align: center;
+}
+
+.note { font-style: italic; }
+
+#euc-dist {
+	cursor: pointer;
+	background: #994444;
+}
+
+a { color: var(--light); }
+
+.mono {
+	font-family: 'Roboto', monospace;
+}
+</style>
+
+
+</head>
+
+<body>
+<section id="input-col">
+	<h1>Paint comparator</h1><br />
+	<span class="txt-main">Have you ever seen a miniature online and wished you knew how to pick the colours? Pick the colour you want in hex form and plug
+	it into the search below to get the closest color paint matched. Pick from Citadel and Vellejo (more to come!)</span><br />
+
+	<span class="note">NOTE: You can sort by clicking on the table's headings. Its not a perfect system, but it's something!</span><br />
+	<span>FUN FACT: This uses a mathematics formula called 'Euclidean Distance' to determine the closeness between colors.</span><br />
+
+	<span>You can use an Online Color Picker (like this one <a href="https://imagecolorpicker.com/en">here</a>) if you're unsure how to pick colours.</span><br />
+
+	<h3>Search with hex</h3>
+	<span>(e.g. #FFFFFF)</span><br />
+	<input type="text" id="input-color" /><br /><br />
+
+<table id="paint-list">
+	<thead>
+		<tr>
+			<th id="paint-name">Paint Name</th>
+			<th id="paint-range">Paint Range</th>
+			<th id="hex-val">Hex value</th>
+			<th id="euc-dist">Distance</th>
+			<th id="color">Color</th>
+			<th id="color">Comparator</th>
+		</tr>
+	</thead>
+
+	<tbody>
+	</tbody>
+</table>
+	<h3>Sources</h3>
+	<a href="https://redgrimm.github.io/paint-conversion/">Redgrimm on Github.io</a><br />
+	<a href=""></a><br />
+</section>
+
+</body>
+
+
+
+<script>
+let startup = 1;
+let globalRGB = [0,0,0];
+
+let arrPaints = [
+["Abaddon Black","Citadel", "231F20"],
+["Administratum Grey","Citadel", "949B95"],
+["Agrax Earthshade (Gloss)","Citadel", "5A573F"],
+["Agrax Earthshade","Citadel", "5A573F"],
+["Ahriman Blue","Citadel", "1F8C9C"],
+["Alaitoc Blue","Citadel", "295788"],
+["Alien Purple","Army Painter ", "50317b"],
+["Altdorf Guard Blue","Citadel", "1F56A7"],
+["Angel Green","Army Painter ", "0c391d"],
+["Arcane Blue","P3 Formula ", "7acfd9"],
+["Army Green","Army Painter ", "6e7645"],
+["Ash Grey","Army Painter ", "a2a5a4"],
+["Astorath Red","Citadel", "DD482B"],
+["Athonian Camoshade","Citadel", "6D8E44"],
+["Auric Armour Gold (Metal)","Citadel", "E8BC6D"],
+["Averland Sunset","Citadel", "FDB825"],
+["Azure","Vallejo Model ", "717cad"],
+["Babe Blonde","Army Painter ", "f8dd0d"],
+["Baharroth Blue","Citadel", "58C1CD"],
+["Balor Brown","Citadel", "8B5910"],
+["Balthasar Gold (Metal)","Citadel", "A47552"],
+["Baneblade Brown","Citadel", "937F6D"],
+["Barbarian Flesh","Army Painter ", "e89c6c"],
+["Bastion Grey","P3 Formula ", "777965"],
+["Battledress Green","P3 Formula ", "757232"],
+["Battlefield Brown","P3 Formula ", "32251c"],
+["Beast Hide","P3 Formula ", "b1956b"],
+["Beasty Brown","Vallejo Game ", "55432d"],
+["Beaten Purple","P3 Formula ", "552a72"],
+["Beige Red","Vallejo Model ", "c79166"],
+["Beige","Vallejo Model ", "dbc58e"],
+["Bestigor Flesh","Citadel", "D38A57"],
+["Biel-Tan Green","Citadel", "1BA169"],
+["Black Green","Vallejo Model ", "19423e"],
+["Black","Vallejo Game ", "000000"],
+["Bloodstone","P3 Formula ", "9e4822"],
+["Bloodtracker Brown","P3 Formula ", "a66a28"],
+["Bloody Red","Vallejo Game ", "bf282e"],
+["Blue Green","Vallejo Model ", "1a9496"],
+["Blue Grey Pale","Vallejo Model ", "9ea7a5"],
+["Blue Horror","Citadel", "A2BAD2"],
+["Blue Violet","Vallejo Model ", "795c9a"],
+["Blue","Vallejo Model ", "043667"],
+["Bone White","Vallejo Game ", "e8be86"],
+["Bootstrap Leather","P3 Formula ", "956939"],
+["Brass Scorpion (Metal)","Citadel", "B7885F"],
+["Bright Orange","Vallejo Model ", "f26833"],
+["Bronze Fleshtone","Vallejo Game ", "db945c"],
+["Buff","Vallejo Model ", "d2ca9f"],
+["Bugmans Glow","Citadel", "834F44"],
+["Burnt Umber","Vallejo Model ", "665148"],
+["Cadian Fleshtone","Citadel", "C77958"],
+["Caledor Sky","Citadel", "396E9E"],
+["Calgar Blue","Citadel", "4272B8"],
+["Caliban Green","Citadel", "00401F"],
+["Camoflage Green","Vallejo Game ", "71753a"],
+["Carmine Red","Vallejo Model ", "b73035"],
+["Carnal Pink","P3 Formula ", "fae2ec"],
+["Carroburg Crimson","Citadel", "A82A70"],
+["Casandora Yellow","Citadel", "FECE5A"],
+["Castellan Green","Citadel", "314821"],
+["Cavalry Brown","Vallejo Model ", "853f3d"],
+["Cayman Green","Vallejo Game ", "285648"],
+["Celestra Grey","Citadel", "90A8A8"],
+["Centaur Skin","Army Painter ", "deaba0"],
+["Ceramite White","Citadel", "FFFFFF"],
+["Changeling Pink","Citadel", "F4AFCD"],
+["Chaotic Red","Army Painter ", "6c1e10"],
+["Charred Brown","Vallejo Game ", "39343b"],
+["Chronus Blue","Citadel", "72A8D1"],
+["Coal Black","P3 Formula ", "005a61"],
+["Coelia Greenshade","Citadel", "0E7F78"],
+["Cold Grey","Vallejo Game ", "54646d"],
+["Combat Fatigue","Army Painter ", "878e5c"],
+["Commando Green","Army Painter ", "827b39"],
+["Corpse Pale","Army Painter ", "edccad"],
+["Crystal Blue","Army Painter ", "0083c2"],
+["Cryx Bane Base","P3 Formula ", "303924"],
+["Cryx Bane Highlight","P3 Formula ", "93907d"],
+["Cultist Robe","Army Painter ", "756e60"],
+["Cygnar Base Blue","P3 Formula ", "124b9b"],
+["Cygnar Blue Highlight","P3 Formula ", "1f75bb"],
+["Cygnus Yellow","P3 Formula ", "f3e72e"],
+["Daemonette Hide","Citadel", "696684"],
+["Daemonic Yellow","Army Painter ", "fada06"],
+["Dark Flesh","Vallejo Model ", "d9a262"],
+["Dark Fleshtone","Vallejo Game ", "4f2b26"],
+["Dark Green","Vallejo Game ", "083c2a"],
+["Dark Prussian Blue","Vallejo Model ", "192c43"],
+["Dark Reaper","Citadel", "3B5150"],
+["Dark Red","Vallejo Model ", "a24a46"],
+["Dark Sea Grey","Vallejo Model ", "787d7a"],
+["Dark Sky","Army Painter ", "2b4b5f"],
+["Dark Stone","Army Painter ", "605752"],
+["Dark Yellow","Vallejo Model ", "9d9059"],
+["Dawnstone","Citadel", "70756E"],
+["Dawnstone","Citadel", "919C9F"],
+["Dead Flesh","Vallejo Game ", "bcb686"],
+["Dead White","Vallejo Game ", "ffffff"],
+["Death Guard Green","Citadel", "848A66"],
+["Deathclaw Brown","Citadel", "B36853"],
+["Deathworld Forest","Citadel", "5C6730"],
+["Dechala Lilac","Citadel", "B69FCC"],
+["Deep Blue","Army Painter ", "083251"],
+["Deep Sky Blue","Vallejo Model ", "00a6da"],
+["Deep Yellow","Vallejo Model ", "ffe30c"],
+["Dirt Spatter","Army Painter ", "5e3827"],
+["Doombull Brown","Citadel", "5D0009"],
+["Dorn Yellow","Citadel", "FFF200"],
+["Dragon Red","Army Painter ", "9a1b1e"],
+["Drake Tooth","Army Painter ", "cfcbb4"],
+["Drakenhof Nightshade","Citadel", "125899"],
+["Druchii Violet","Citadel", "7A468C"],
+["Dryad Bark","Citadel", "33312D"],
+["Dungeon Grey","Army Painter ", "686c71"],
+["Dwarf Skin","Vallejo Game ", "cc7c67"],
+["Eldar Flesh","Citadel", "ECC083"],
+["Electric Blue","Vallejo Game ", "008cbf"],
+["Elemental Bolt","Army Painter ", "009a82"],
+["Elf Green","Army Painter ", "495122"],
+["Elfic Flesh","Vallejo Game ", "cdc29c"],
+["Elysian Green","Citadel", "748F39"],
+["Emperors Children","Citadel", "B94278"],
+["English Uniform","Vallejo Model ", "715833"],
+["Eshin Grey","Citadel", "4A4F52"],
+["Etherium Blue","Citadel", "A2BAD2"],
+["Evil Sunz Scarlet","Citadel", "C2191F"],
+["Exile Blue","P3 Formula ", "203367"],
+["Fenrisian Grey","Citadel", "719BB7"],
+["Field Blue","Vallejo Model ", "436872"],
+["Field Grey","Army Painter ", "787c78"],
+["Filthy Cape","Army Painter ", "7c7863"],
+["Fire Dragon Bright","Citadel", "F58652"],
+["Fire Lizard","Army Painter ", "d67128"],
+["Flash Gitz Yellow","Citadel", "FFF200"],
+["Flat Blue","Vallejo Model ", "336991"],
+["Flat Earth","Vallejo Model ", "87643c"],
+["Flat Flesh","Vallejo Model ", "d8a977"],
+["Flat Green","Vallejo Model ", "2a6531"],
+["Flat Red","Vallejo Model ", "aa3037"],
+["Flayed One Flesh","Citadel", "F0D9B8"],
+["Foul Green","Vallejo Game ", "239378"],
+["French Mirage Blue","Vallejo Model ", "557880"],
+["Fuegan Orange","Citadel", "C77E4D"],
+["Fulgrim Pink","Citadel", "F4AFCD"],
+["Fulgurite Copper (Metal)","Citadel", "FCFCDE"],
+["Gauss Blaster Green","Citadel", "84C3AA"],
+["Gehenna's Gold (Metal)","Citadel", "DBA674"],
+["Genestealer Purple","Citadel", "7761AB"],
+["German Cam. Black Brown","Vallejo Model ", "553528"],
+["German Cam. Medium Brown","Vallejo Model ", "722b2f"],
+["German Cam. Pale Brown","Vallejo Model ", "82685e"],
+["Ghost Grey","Vallejo Game ", "a7c5db"],
+["Glossy Black","Vallejo Model ", "010101"],
+["Gnarls Green","P3 Formula ", "126232"],
+["Goblin Green","Army Painter ", "348941"],
+["Gold Brown","Vallejo Model ", "ba8636"],
+["Gold Yellow","Vallejo Game ", "fdb318"],
+["Golden Griffon (Metal)","Citadel", "A99058"],
+["Golden Olive","Vallejo Model ", "78923b"],
+["Golden Yellow","Vallejo Model ", "f7c65e"],
+["Golgfag Brown","Citadel", "C2804F"],
+["Gorgon Hide","Army Painter ", "c7d2e4"],
+["Gorthor Brown","Citadel", "654741"],
+["Gory Red","Vallejo Game ", "810504"],
+["Greatcoat Grey","P3 Formula ", "4d5861"],
+["Green Grey","Vallejo Model ", "827e61"],
+["Greenskin","Army Painter ", "136232"],
+["Grey Blue","Vallejo Model ", "45708d"],
+["Grey Green","Vallejo Model ", "565a60"],
+["Grey Grey","Vallejo Model ", "aecbbb"],
+["Griffon Blue","Army Painter ", "215383"],
+["Gun Corps Brown","P3 Formula ", "937d48"],
+["Hammerfall Khaki","P3 Formula ", "c8bf98"],
+["Hardened Carapace","Army Painter ", "4c473f"],
+["Hashut Copper (Metal)","Citadel", "B77647"],
+["Heartfire","P3 Formula ", "f6b046"],
+["Heavy Blue Grey","Vallejo Game ", "9ca7a7"],
+["Heavy Blue","Vallejo Game ", "29556d"],
+["Heavy Brown","Vallejo Game ", "705d41"],
+["Heavy Gold Brown","Vallejo Game ", "ba8636"],
+["Heavy Green","Vallejo Game ", "566840"],
+["Heavy Khaki","Vallejo Game ", "9d965d"],
+["Heavy Ochre","Vallejo Game ", "a87536"],
+["Heavy Red","Vallejo Game ", "943238"],
+["Heavy Sienna","Vallejo Game ", "744642"],
+["Heavy Skintone","Vallejo Game ", "aa7b62"],
+["Heavy Violet","Vallejo Game ", "4c2e65"],
+["Heavy Warm Grey","Vallejo Game ", "939066"],
+["Hellion Green","Citadel", "84C3AA"],
+["Hexed Lichen","Vallejo Game ", "34274d"],
+["Hexos Palesun","Citadel", "FFF200"],
+["Hoeth Blue","Citadel", "4C7FB4"],
+["Hoeth Blue","Citadel", "57A9D4"],
+["Hot Orange","Vallejo Game ", "e43027"],
+["Hull Red","Vallejo Model ", "522724"],
+["Hydra Turquoise","Army Painter ", "199ba3"],
+["Ice Storm","Army Painter ", "639ec9"],
+["Idrian Flesh","P3 Formula ", "9b5e37"],
+["Imrik Blue","Citadel", "67AED0"],
+["Incubi Darkness","Citadel", "0B474A"],
+["Intermediate Green","Vallejo Model ", "49944f"],
+["Iosan Green","P3 Formula ", "22a854"],
+["Iraqi Sand","Vallejo Model ", "b89972"],
+["Ironbreaker (Metal)","Citadel", "A1A6A9"],
+["Ironhull Grey","P3 Formula ", "8e969b"],
+["Jack Bone","P3 Formula ", "d6d4aa"],
+["Jokaero Orange","Citadel", "EE3823"],
+["Jungle Green","Army Painter ", "88ac2e"],
+["Kabalite Green","Citadel", "038C67"],
+["Kantor Blue","Citadel", "002151"],
+["Karak Stone","Citadel", "BB9662"],
+["Khador Red Base","P3 Formula ", "ee2824"],
+["Khador Red Highlight","P3 Formula ", "f29042"],
+["Khaki","Vallejo Game ", "8c806d"],
+["Khardic Flesh","P3 Formula ", "cb7b5b"],
+["Khorne Red","Citadel", "6A0001"],
+["Kindleflame","Citadel", "F79E86"],
+["Kislev Flesh","Citadel", "D6A875"],
+["Kobold Skin","Army Painter ", "c9a484"],
+["Kraken Skin","Army Painter ", "71c591"],
+["Krieg Khaki","Citadel", "C0BD81"],
+["Leadbelcher (Metal)","Citadel", "888D8F"],
+["Leather Brown","Army Painter ", "764823"],
+["Leather Brown","Vallejo Game ", "7b5d2a"],
+["Lemon Yellow","Vallejo Model ", "fef10e"],
+["Liberator Gold (Metal)","Citadel", "D3B587"],
+["Light Brown","Vallejo Model ", "bf764e"],
+["Light Green","Vallejo Model ", "00a850"],
+["Light Orange","Vallejo Model ", "f68627"],
+["Light Sea Grey","Vallejo Model ", "97b4b5"],
+["Lime Green","Vallejo Model ", "6fae4e"],
+["Longbeard Grey","Citadel", "CECEAF"],
+["Loren Forest","Citadel", "50702D"],
+["Lothern Blue","Citadel", "34A2CF"],
+["Lucius Lilac","Citadel", "B69FCC"],
+["Luftwaffe Cam. Green","Vallejo Model ", "596b3f"],
+["Lugganath Orange","Citadel", "F79E86"],
+["Macragge Blue","Citadel", "0D407F"],
+["Magenta","Vallejo Model ", "a92a56"],
+["Magic Blue","Vallejo Game ", "024381"],
+["Mars Red","Army Painter ", "b73b37"],
+["Matt Black","Army Painter ", "231f20"],
+["Matt White","Army Painter ", "ffffff"],
+["Mechanicus Standard Grey","Citadel", "3D4B4D"],
+["Medium Olive","Vallejo Model ", "226b2e"],
+["Medium Sea Grey","Vallejo Model ", "869393"],
+["Mephiston Red","Citadel", "9A1115"],
+["Meredius Blue","P3 Formula ", "00b0b9"],
+["Middlestone","Vallejo Model ", "9c9660"],
+["Midlund Flesh","P3 Formula ", "f0a983"],
+["Moldy Ochre","P3 Formula ", "ddb43e"],
+["Monster Brown","Army Painter ", "855c2a"],
+["Moon Yellow","Vallejo Game ", "fff103"],
+["Moot Green","Citadel", "52B244"],
+["Morrow White","P3 Formula ", "FEFBFD"],
+["Mournfang Brown","Citadel", "640909"],
+["Murderous Magenta","P3 Formula ", "a81f5e"],
+["Mutation Green","Vallejo Game ", "296934"],
+["Mythical Orange","Army Painter ", "e73d24"],
+["Naggaroth Night","Citadel", "3D3354"],
+["Necromance Cloak","Army Painter ", "3c3d37"],
+["Necron Compound (Metal)","Citadel", "828B8E"],
+["Necrotic Flesh","Army Painter ", "bfc292"],
+["Niblet Green","Citadel", "7DC734"],
+["Nuln Oil (Gloss)","Citadel", "14100E"],
+["Nuln Oil","Citadel", "14100E"],
+["Nurgling Green","Citadel", "849C63"],
+["Nurgling Green","Citadel", "B8CC82"],
+["Ochre Brown","Vallejo Model ", "a77237"],
+["Ogryn Camo","Citadel", "9DA94B"],
+["Olive Green","Vallejo Model ", "6a8b3a"],
+["Oozing Purple","Army Painter ", "aa94b4"],
+["Orange Brown","Vallejo Model ", "b86f44"],
+["Orange Fire","Vallejo Game ", "f1652e"],
+["Orc Blood","Army Painter ", "925f6e"],
+["Ordic Olive","P3 Formula ", "6e7e36"],
+["Oxford Blue","Vallejo Model ", "3a465f"],
+["Pale Blue","Vallejo Model ", "83b5b2"],
+["Pale Flesh","Vallejo Game ", "f6bdb3"],
+["Pale Grey Blue","Vallejo Model ", "bacdd0"],
+["Pale Sand","Vallejo Model ", "d1c49c"],
+["Pale Yellow","Vallejo Game ", "d5c179"],
+["Pallid Wych Flesh","Citadel", "CDCEBE"],
+["Parasite Brown","Vallejo Game ", "b1481f"],
+["Park Green Flat","Vallejo Model ", "008c5d"],
+["Pastel Blue","Vallejo Model ", "67859b"],
+["Phoenix Flames","Army Painter ", "faa61a"],
+["Pink Horror","Citadel", "90305D"],
+["Plague Brown","Vallejo Game ", "cc9b34"],
+["Praxeti White","Citadel", "FFFFFF"],
+["Pure Red","Army Painter ", "cf2127"],
+["Rakarth Flesh","Citadel", "A29E91"],
+["Ratskin Flesh","Citadel", "AD6B4C"],
+["Reflective Green","Vallejo Model ", "496244"],
+["Reikland Fleshshade (Gloss)","Citadel", "CA6C4D"],
+["Reikland Fleshshade","Citadel", "CA6C4D"],
+["Retributor Armour (Metal)","Citadel", "C39E81"],
+["Rhinox Hide","Citadel", "493435"],
+["Rosy Flesh","Vallejo Game ", "f89e84"],
+["Royal Blue","Vallejo Model ", "41558d"],
+["Royal Purple","Vallejo Game ", "23264f"],
+["Royal Purple","Vallejo Model ", "4b2967"],
+["Rucksack Tan","P3 Formula ", "b4973f"],
+["Runefang Steel (Metal)","Citadel", "C3CACE"],
+["Runelord Brass (Metal)","Citadel", "B6A89A"],
+["Russ Grey","Citadel", "547588"],
+["Ryza Rust","Citadel", "EC631A"],
+["Saddle Brown","Vallejo Model ", "89584f"],
+["Salmon Rose","Vallejo Model ", "f89d87"],
+["Sand Yellow","Vallejo Model ", "d7bf75"],
+["Sanguine Base","P3 Formula ", "6c160f"],
+["Scaly Hide","Army Painter ", "859852"],
+["Scarlet","Vallejo Model ", "da3630"],
+["Scorpion Green","Vallejo Game ", "48b851"],
+["Screamer Pink","Citadel", "7C1645"],
+["Screaming Bell (Metal)","Citadel", "C16F45"],
+["Screaming Skull","Citadel", "D2D4A2"],
+["Scurvy Green","Vallejo Game ", "09474e"],
+["Seraphim Sepia","Citadel", "D7824B"],
+["Sigmarite","Citadel", "CAAD76"],
+["Silver Grey","Vallejo Model ", "d8dfd5"],
+["Skarsnik Green","Citadel", "5F9370"],
+["Skavenblight Dinge","Citadel", "47413B"],
+["Skeleton Bone","Army Painter ", "d3c89d"],
+["Skink Blue","Citadel", "58C1CD"],
+["Skorne Red","P3 Formula ", "b01f24"],
+["Skrag Brown","Citadel", "90490F"],
+["Skullcrusher Brass (Metal)","Citadel", "F1C78E"],
+["Sky Grey","Vallejo Model ", "b3b6b2"],
+["Slaanesh Grey","Citadel", "8E8C97"],
+["Slaanesh Grey","Citadel", "DBD5E6"],
+["Sombre Grey","Vallejo Game ", "4c5c7d"],
+["Sotek Green","Citadel", "0B6974"],
+["Spaceship Exterior","Army Painter ", "cdced0"],
+["Squig Orange","Citadel", "AA4F44"],
+["Steel Grey","Vallejo Game ", "64889d"],
+["Steel Legion Drab","Citadel", "5E5134"],
+["Stegadon Scale Green","Citadel", "074863"],
+["Stone Grey","Vallejo Model ", "959980"],
+["Stonewall Grey","Vallejo Game ", "828e95"],
+["Stormfang","Citadel", "80A7C1"],
+["Stormhost Silver (Metal)","Citadel", "BBC6C9"],
+["Stormvermin Fur","Citadel", "736B65"],
+["Straken Green","Citadel", "628126"],
+["Sulfuric Yellow","P3 Formula ", "f0d233"],
+["Sulphide Ochre","Army Painter ", "c68512"],
+["Sun Yellow","Vallejo Game ", "ffcf07"],
+["Sunset Red","Vallejo Model ", "c22c5f"],
+["Sybarite Green","Citadel", "30A56C"],
+["Sycorax Bronze (Metal)","Citadel", "CBB394"],
+["Sylvaneth Bark","Citadel", "AC8262"],
+["Tallarn Sand","Citadel", "A67610"],
+["Tan Earth","Vallejo Model ", "9c7962"],
+["Tan","Vallejo Game ", "9f4746"],
+["Tanned Flesh","Army Painter ", "bc745e"],
+["Tau Light Ochre","Citadel", "BF6E1D"],
+["Teclis Blue","Citadel", "317EC1"],
+["Temple Guard Blue","Citadel", "339A8D"],
+["Terminatus Stone","Citadel", "BDB192"],
+["Terracota","Vallejo Game ", "6b1306"],
+["Thamar Black","P3 Formula ", "040707"],
+["The Fang Grey","Citadel", "436174"],
+["Thornwood Green","P3 Formula ", "65654b"],
+["Thousand Sons Blue","Citadel", "18ABCC"],
+["Thunderhawk Blue","Citadel", "417074"],
+["Thunderhawk Blue","Citadel", "509BA9"],
+["Toxic Mist","Army Painter ", "39c0c5"],
+["Traitor Green","P3 Formula ", "809065"],
+["Troll Claws","Army Painter ", "cb8b4e"],
+["Troll Slayer Orange","Citadel", "F36D2D"],
+["Trollblood Base","P3 Formula ", "13899b"],
+["Trollblood Highlight","P3 Formula ", "bab4a3"],
+["Turquoise","Vallejo Game ", "03676f"],
+["Turquoise","Vallejo Model ", "008e9c"],
+["Tuskgor Fur","Citadel", "883636"],
+["Tyrant Skull","Citadel", "CDC586"],
+["Ulthuan Grey","Citadel", "C7E0D9"],
+["Ultramarine Blue","Army Painter ", "0f4e85"],
+["Ultramarine","Vallejo Model ", "3b5da7"],
+["Underbelly Blue","P3 Formula ", "c0d4da"],
+["Underhive Ash","Citadel", "C0BD81"],
+["Ungor Flesh","Citadel", "D6A766"],
+["Uniform Green","Vallejo Model ", "577a38"],
+["Uniform Grey","Army Painter ", "5e6a73"],
+["USA Olive Drab","Vallejo Model ", "3b4947"],
+["Ushabti Bone","Citadel", "BBBB7F"],
+["Vampire Red","Army Painter ", "981d34"],
+["Venom Wyrm","Army Painter ", "6a653e"],
+["Verdigris","Vallejo Game ", "b3ceca"],
+["Verminlord Hide","Citadel", "A16954"],
+["Viking Blue","Army Painter ", "00609a"],
+["Violet Red","Vallejo Model ", "6b2946"],
+["Violet","Vallejo Model ", "4b2f65"],
+["Voidshield Blue","Army Painter ", "2ca2d9"],
+["Waaagh! Flesh","Citadel", "1F5429"],
+["Warboss Green","Citadel", "3E805D"],
+["Warlord Purple","Vallejo Game ", "7d1a44"],
+["Warpfiend Grey","Citadel", "6B6A74"],
+["Warplock Bronze (Metal)","Citadel", "927D7B"],
+["Warpstone Glow","Citadel", "1E7331"],
+["Wasteland Soil","Army Painter ", "774b58"],
+["Wazdakka Red","Citadel", "8C0A0C"],
+["Werewolf Fur","Army Painter ", "785e4e"],
+["White Scar","Citadel", "FFFFFF"],
+["White","Vallejo Model ", "ffffff"],
+["Wild Rider Red","Citadel", "EA2F28"],
+["Witch Brew","Army Painter ", "92963e"],
+["Wizards Orb","Army Painter ", "00726a"],
+["Wolf Grey","Army Painter ", "5b8093"],
+["Wolf Grey","Vallejo Game ", "90a2bc"],
+["Wrack White","Citadel", "FCFBFA"],
+["Wurm Green","P3 Formula ", "8fbe40"],
+["Xereus Purple","Citadel", "471F5F"],
+["XV-88","Citadel", "72491E"],
+["Yellow Olive","Vallejo Model ", "26392e"],
+["Yriel Yellow","Citadel", "FFDA00"],
+["Zamesi Desert","Citadel", "DDA026"],
+["Zandri Dust","Citadel", "9E915C"]
+];
+
+function euclideanDistance(a, b) {
+    return a
+        .map((x, i) => Math.abs( x - b[i] ) ** 2) // square the difference
+        .reduce((sum, now) => sum + now) // sum
+        ** (1/2)
+}
+
+let euc = euclideanDistance([255,255,255], [0,0,0]);
+console.log(euc);
+
+function color(item) {
+	RGB = new RegExp(/^rgb\((((((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]),\s?)){2}|((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5])\s)){2})((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]))|((((([1-9]?\d(\.\d+)?)|100|(\.\d+))%,\s?){2}|((([1-9]?\d(\.\d+)?)|100|(\.\d+))%\s){2})(([1-9]?\d(\.\d+)?)|100|(\.\d+))%))\)$/i);
+
+	if (item != "") {
+		if (item.match(RGB)) {
+			convertToHex = RGBToHex(item);
+		} else {
+			convertToHex = "FAILED";
+		}
+	}
+
+	return convertToHex;
+}
+
+function HexToRGB(h) {
+	let r = 0, g = 0, b = 0;
+
+	if (h.length == 4) {
+		r = "0x" + h[1] + h[1];
+		g = "0x" + h[2] + h[2];
+		b = "0x" + h[3] + h[3];
+	} else if (h.length == 7) {
+		r = "0x" + h[1] + h[2];
+		g = "0x" + h[3] + h[4];
+		b = "0x" + h[5] + h[6];
+	}
+  
+	return "rgb("+ +r + "," + +g + "," + +b + ")";
+}
+
+$("#input-color").change(function(){
+	colorx = $("#input-color").val();
+
+	if ($("#input-color").val() == "") {
+		$('#paint-list').css('display','none');
+	} else {
+		$('#paint-list').css('display','block');
+	}
+
+	strRGB = HexToRGB(colorx);
+	cleanRGB = strRGB.substring(4, strRGB.length - 1);
+	arrRGB = cleanRGB.split(',');
+	globalRGB = arrRGB;
+
+	console.log(globalRGB);
+	//$("#input-color").css('background', strRGB);
+
+	console.log(euclideanDistance(globalRGB, arrRGB));
+
+	generateTable(strRGB);
+});
+
+function generateTable(CompareColor) {
+	$('#paint-list tbody').empty();
+
+	output = '';
+	for(var i=0; i < arrPaints.length; i++){
+		strRGB = HexToRGB('#' + arrPaints[i][2]);
+		cleanRGB = strRGB.substring(4, strRGB.length - 1);
+		arrRGB = cleanRGB.split(',');
+
+		arrPaints[i][3] = Math.round(euclideanDistance(globalRGB, arrRGB));
+
+		output += '<tr>';
+		output += '<td>' + arrPaints[i][0] + '</td>';
+		output += '<td>' + arrPaints[i][1] + '</td>';
+		output += '<td class="mono">#' + arrPaints[i][2] + '</td>';
+		output += '<td>' + arrPaints[i][3] + '</td>';
+		output += '<td style="width: 50px; background: #' + arrPaints[i][2] + ';"></td>';
+		output += '<td style="width: 50px; background: ' + CompareColor + ';"></td>';
+		output += '</tr>';
+	}
+
+	$('#paint-list tbody').append(output);
+	output = '';
+
+	if (startup == 1) {
+		$('#euc-dist').trigger('click');
+	}
+	
+	startup = 0;
+}
+
+$('#euc-dist').click(function(){
+    var table = $(this).parents('table').eq(0)
+    var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+    this.asc = !this.asc
+    if (!this.asc){rows = rows.reverse()}
+    for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+})
+function comparer(index) {
+    return function(a, b) {
+        var valA = getCellValue(a, index), valB = getCellValue(b, index)
+        return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+    }
+}
+
+function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
+</script>
+
+</html>
