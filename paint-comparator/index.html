@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>UX Test</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content>
+	<meta name="keywords" content="Citadel, Vallejo, P3 Formula, Army Painter, comparison, search, conversion, matcher, match">
+	<meta name="author" content="Nick Ryden">
+
+	<title>Miniature paint matcher (Citadel, Vallejo, Army Painter and P3 Formula)</title>
 
 	<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -159,8 +163,8 @@ a { color: var(--light); }
 
 	<span>You can use an Online Color Picker (like this one <a href="https://imagecolorpicker.com/en" target="_blank">here</a>) if you're unsure how to pick colours.</span><br />
 
-	<h3>Search with hex</h3>
-	<span>(e.g. #FFFFFF)</span><br />
+	<h3>Search with Hex, RGB or HSL</h3>
+	<span>(e.g. #7e1b55, rgb(128,40,40), hsl(342,24%,38%))</span><br />
 	<input type="text" id="input-color" /><br /><br />
 
 <table id="paint-list">
@@ -621,21 +625,37 @@ function euclideanDistance(a, b) {
 }
 
 let euc = euclideanDistance([255,255,255], [0,0,0]);
-console.log(euc);
 
 function color(item) {
+	// regex or colours
 	RGB = new RegExp(/^rgb\((((((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]),\s?)){2}|((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5])\s)){2})((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]))|((((([1-9]?\d(\.\d+)?)|100|(\.\d+))%,\s?){2}|((([1-9]?\d(\.\d+)?)|100|(\.\d+))%\s){2})(([1-9]?\d(\.\d+)?)|100|(\.\d+))%))\)$/i);
+	Hex = new RegExp(/^#([\da-f]{3}){1,2}$/i);
+	HSL = new RegExp(/^hsl\(((((([12]?[1-9]?\d)|[12]0\d|(3[0-5]\d))(\.\d+)?)|(\.\d+))(deg)?|(0|0?\.\d+)turn|(([0-6](\.\d+)?)|(\.\d+))rad)((,\s?(([1-9]?\d(\.\d+)?)|100|(\.\d+))%){2}|(\s(([1-9]?\d(\.\d+)?)|100|(\.\d+))%){2})\)$/i);
 
 	if (item != "") {
 		if (item.match(RGB)) {
-			convertToHex = RGBToHex(item);
+			convertToRGB = item;
+			cleanRGB = convertToRGB.substring(4,convertToRGB.length - 1);
+			arrRGB = cleanRGB.split(',');
+		} else if (item.match(Hex)) {
+			convertToRGB = HexToRGB(item);
+			cleanRGB = convertToRGB.substring(4,convertToRGB.length - 1);
+			arrRGB = cleanRGB.split(',');
+		} else if (item.match(HSL)) {
+			cleanHSLRGB = item.substring(4,item.length - 1);
+			cleanHSLRGB = cleanHSLRGB.replaceAll("%","")
+			arrHSLRGB = cleanHSLRGB.split(',');
+			HSL = HSLToRGB(arrHSLRGB[0], arrHSLRGB[1], arrHSLRGB[2])
+			cleanRGB = HSL.substring(4,HSL.length - 1);
+			arrRGB = cleanRGB.split(',');
 		} else {
-			convertToHex = "FAILED";
+			arrRGB = [0,0,0];
 		}
 	}
-
-	return convertToHex;
+	return arrRGB;
 }
+
+
 
 function HexToRGB(h) {
 	let r = 0, g = 0, b = 0;
@@ -653,6 +673,37 @@ function HexToRGB(h) {
 	return "rgb("+ +r + "," + +g + "," + +b + ")";
 }
 
+function HSLToRGB(h,s,l) {
+	s /= 100;
+	l /= 100;
+
+	let c = (1 - Math.abs(2 * l - 1)) * s,
+	    x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+	    m = l - c/2,
+	    r = 0,
+	    g = 0,
+	    b = 0;
+
+	if (0 <= h && h < 60) {
+		r = c; g = x; b = 0;
+	} else if (60 <= h && h < 120) {
+		r = x; g = c; b = 0;
+	} else if (120 <= h && h < 180) {
+		r = 0; g = c; b = x;
+	} else if (180 <= h && h < 240) {
+		r = 0; g = x; b = c;
+	} else if (240 <= h && h < 300) {
+		r = x; g = 0; b = c;
+	} else if (300 <= h && h < 360) {
+		r = c; g = 0; b = x;
+	}
+	r = Math.round((r + m) * 255);
+	g = Math.round((g + m) * 255);
+	b = Math.round((b + m) * 255);
+
+	return "rgb(" + r + "," + g + "," + b + ")";
+}
+
 $("#input-color").change(function(){
 	colorx = $("#input-color").val();
 
@@ -662,17 +713,14 @@ $("#input-color").change(function(){
 		$('#paint-list').css('display','block');
 	}
 
-	strRGB = HexToRGB(colorx);
-	cleanRGB = strRGB.substring(4, strRGB.length - 1);
-	arrRGB = cleanRGB.split(',');
-	globalRGB = arrRGB;
+	//strRGB = HexToRGB(colorx);
+	//cleanRGB = strRGB.substring(4, strRGB.length - 1);
+	//arrRGB = cleanRGB.split(',');
+	//globalRGB = arrRGB;
 
-	console.log(globalRGB);
-	//$("#input-color").css('background', strRGB);
+	globalRGB = color(colorx);
 
-	console.log(euclideanDistance(globalRGB, arrRGB));
-
-	generateTable(strRGB);
+	generateTable(colorx);
 });
 
 function generateTable(CompareColor) {
