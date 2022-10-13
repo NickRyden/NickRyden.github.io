@@ -161,10 +161,10 @@ a { color: var(--light); }
 	<span class="note">NOTE: You can sort results by clicking on 'Distance' on the table's headings.</span><br />
 	<span>FUN FACT: This uses a mathematics formula called 'Euclidean Distance' to determine the distance between colors.</span><br />
 
-	<span>You can use an Online Color Picker (like this one <a href="https://imagecolorpicker.com/en" target="_blank">here</a>) if you're unsure how to pick colours.</span><br />
+	<span>You can use an Online Color Picker (like this one <a href="https://imagecolorpicker.com/en" target="_blank">here</a>) if you're unsure how to pick colours.</span><br /><br />
 
-	<h3>Search with Hex, RGB or HSL</h3>
-	<span>(e.g. #7e1b55, rgb(128,40,40), hsl(342,24%,38%))</span><br />
+	<h3>Search by Paint name or by Hex, RGB or HSL values</h3>
+	<span>(e.g. Black, #7e1b55, rgb(128,40,40), hsl(342,24%,38%))</span><br />
 	<input type="text" id="input-color" /><br /><br />
 
 <table id="paint-list">
@@ -624,39 +624,6 @@ function euclideanDistance(a, b) {
         ** (1/2)
 }
 
-let euc = euclideanDistance([255,255,255], [0,0,0]);
-
-function color(item) {
-	// regex or colours
-	RGB = new RegExp(/^rgb\((((((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]),\s?)){2}|((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5])\s)){2})((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]))|((((([1-9]?\d(\.\d+)?)|100|(\.\d+))%,\s?){2}|((([1-9]?\d(\.\d+)?)|100|(\.\d+))%\s){2})(([1-9]?\d(\.\d+)?)|100|(\.\d+))%))\)$/i);
-	Hex = new RegExp(/^#([\da-f]{3}){1,2}$/i);
-	HSL = new RegExp(/^hsl\(((((([12]?[1-9]?\d)|[12]0\d|(3[0-5]\d))(\.\d+)?)|(\.\d+))(deg)?|(0|0?\.\d+)turn|(([0-6](\.\d+)?)|(\.\d+))rad)((,\s?(([1-9]?\d(\.\d+)?)|100|(\.\d+))%){2}|(\s(([1-9]?\d(\.\d+)?)|100|(\.\d+))%){2})\)$/i);
-
-	if (item != "") {
-		if (item.match(RGB)) {
-			convertToRGB = item;
-			cleanRGB = convertToRGB.substring(4,convertToRGB.length - 1);
-			arrRGB = cleanRGB.split(',');
-		} else if (item.match(Hex)) {
-			convertToRGB = HexToRGB(item);
-			cleanRGB = convertToRGB.substring(4,convertToRGB.length - 1);
-			arrRGB = cleanRGB.split(',');
-		} else if (item.match(HSL)) {
-			cleanHSLRGB = item.substring(4,item.length - 1);
-			cleanHSLRGB = cleanHSLRGB.replaceAll("%","")
-			arrHSLRGB = cleanHSLRGB.split(',');
-			HSL = HSLToRGB(arrHSLRGB[0], arrHSLRGB[1], arrHSLRGB[2])
-			cleanRGB = HSL.substring(4,HSL.length - 1);
-			arrRGB = cleanRGB.split(',');
-		} else {
-			arrRGB = [0,0,0];
-		}
-	}
-	return arrRGB;
-}
-
-
-
 function HexToRGB(h) {
 	let r = 0, g = 0, b = 0;
 
@@ -705,7 +672,51 @@ function HSLToRGB(h,s,l) {
 }
 
 $("#input-color").change(function(){
-	colorx = $("#input-color").val();
+	item = $("#input-color").val();
+
+	RGB = new RegExp(/^rgb\((((((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]),\s?)){2}|((((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5])\s)){2})((1?[1-9]?\d)|10\d|(2[0-4]\d)|25[0-5]))|((((([1-9]?\d(\.\d+)?)|100|(\.\d+))%,\s?){2}|((([1-9]?\d(\.\d+)?)|100|(\.\d+))%\s){2})(([1-9]?\d(\.\d+)?)|100|(\.\d+))%))\)$/i);
+	Hex = new RegExp(/^#([\da-f]{3}){1,2}$/i);
+	HSL = new RegExp(/^hsl\(((((([12]?[1-9]?\d)|[12]0\d|(3[0-5]\d))(\.\d+)?)|(\.\d+))(deg)?|(0|0?\.\d+)turn|(([0-6](\.\d+)?)|(\.\d+))rad)((,\s?(([1-9]?\d(\.\d+)?)|100|(\.\d+))%){2}|(\s(([1-9]?\d(\.\d+)?)|100|(\.\d+))%){2})\)$/i);
+
+	if (item != "") {
+		if (item.match(RGB)) {
+			convertToRGB = item;
+			cleanRGB = convertToRGB.substring(4,convertToRGB.length - 1);
+			arrRGB = cleanRGB.split(',');
+		} else if (item.match(Hex)) {
+			convertToRGB = HexToRGB(item);
+			cleanRGB = convertToRGB.substring(4,convertToRGB.length - 1);
+			arrRGB = cleanRGB.split(',');
+		} else if (item.match(HSL)) {
+			cleanHSLRGB = item.substring(4,item.length - 1);
+			cleanHSLRGB = cleanHSLRGB.replaceAll("%","")
+			arrHSLRGB = cleanHSLRGB.split(',');
+			HSL = HSLToRGB(arrHSLRGB[0], arrHSLRGB[1], arrHSLRGB[2])
+			cleanRGB = HSL.substring(4,HSL.length - 1);
+			arrRGB = cleanRGB.split(',');
+		} else {
+			found = 0;
+
+			for(let iPaint = 0; iPaint < arrPaints.length; iPaint++) {
+				search = arrPaints[iPaint].toString().toUpperCase();
+				//query = "Baharroth Blue".toUpperCase();
+				query = item.toUpperCase();
+
+				if (search.indexOf(query) != -1) {
+					convertToRGB = HexToRGB('#' + arrPaints[iPaint][2]);
+					cleanRGB = convertToRGB.substring(4,convertToRGB.length - 1);
+					arrRGB = cleanRGB.split(',');
+					found = 1;
+				}
+			}
+
+			if (found === 0) {
+				arrRGB = ['0','0','0'];
+			}
+		}
+	}
+
+	ColorCompare = 'rgb(' + arrRGB[0] + ',' + arrRGB[1] + ',' + arrRGB[2] + ')';
 
 	if ($("#input-color").val() == "") {
 		$('#paint-list').css('display','none');
@@ -713,14 +724,9 @@ $("#input-color").change(function(){
 		$('#paint-list').css('display','block');
 	}
 
-	//strRGB = HexToRGB(colorx);
-	//cleanRGB = strRGB.substring(4, strRGB.length - 1);
-	//arrRGB = cleanRGB.split(',');
-	//globalRGB = arrRGB;
+	globalRGB = arrRGB;
 
-	globalRGB = color(colorx);
-
-	generateTable(colorx);
+	generateTable(ColorCompare);
 });
 
 function generateTable(CompareColor) {
@@ -772,3 +778,4 @@ function getCellValue(row, index){ return $(row).children('td').eq(index).text()
 </script>
 
 </html>
+
