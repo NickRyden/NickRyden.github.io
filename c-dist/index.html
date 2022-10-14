@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content>
+	<meta name="keywords" content="Citadel, Vallejo, P3 Formula, Army Painter, comparison, search, conversion, matcher, match">
+	<meta name="author" content="Nick Ryden">
+
+	<title>Tchebychev Distance</title>
+
+	<link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+	<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+	<script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+
+<script>
+
+</script>
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400&display=swap" rel="stylesheet">
+
+<style>
+* {
+	--dark: #333;
+	--light: rgb(242,242,247);
+	--color: #008888;
+	transition: 0.5s;
+}
+
+::selection {
+	background: var(--color);
+	color: var(--light);
+}
+
+body {
+	padding: 0px;
+	margin: 0px;
+	color: var(--light);
+	font-family: 'Roboto', sans serif;
+	font-weight: 300;
+	overflow-x: hidden;
+	background: rgb(128,128,128);
+}
+
+section {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	background: rgb(128,128,128);
+	width: 100vw;
+	max-width: 100vw;
+	padding: 30px 0px;
+}
+
+span, h1, h2, h3 { font-weight: 400; }
+
+h1, h2, h3 {
+	padding: 0px;
+	margin: 0px;
+	font-weight: 400;
+	text-align: center;
+}
+
+h1 { font-size: 2.2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.4rem; }
+span { font-size: 1.0rem; }
+
+span {
+	width: 45%;
+	text-align: center;
+}
+
+@media only screen and (hover: none) and (pointer: coarse) {
+
+}
+
+@media (max-width:961px)  {
+
+}
+
+#board table {
+	border-collapse: collapse;
+}
+
+#board table tr td {
+	width: 30px;
+	height: 30px;
+	background: rgb(242,242,242);
+	color: rgb(42,42,42);
+	text-align: center;
+	cursor: pointer;
+}
+
+#board table tr:nth-child(odd) td:nth-child(even) {
+	background: rgb(42,42,42);
+	color: rgb(242,242,242);
+}
+#board table tr:nth-child(even) td:nth-child(odd) {
+	background: rgb(42,42,42);
+	color: rgb(242,242,242);
+}
+
+#warehouse table tr td {
+	width: 30px;
+	height: 30px;
+	border: 1px solid rgb(42,42,42);
+	color: rgb(42,42,42);
+	text-align: center;
+	cursor: pointer;
+}
+
+
+.active {
+	background: #E5F6E6;
+	border: 1px solid #00A908;
+	box-shadow: inset 0px 0px 3px #00A908;
+}
+
+</style>
+
+
+</head>
+
+<body>
+	<section>
+	<h1>Tchebychev Distance</h1>
+	<span>Tchebychev Distance defines vector distances with an array of values in an X and Y axis in a grid pattern. This is useful for determining how many moves a 
+	king on a chessboard (Example 1.) or how long a forklift will take in logistical operations (Example 2)</span><br />
+	<div id="board"></div><br />
+	<span>Example 1: Movement of a king on a chess board (Click to interact)</span><br />
+	<div id="warehouse"></div><br />
+	<div id="result"> </div><br />
+	<span>Example 2: Approximate time it would take for a forklift to get to a certain position on a warehouse shelf stack.</span><br />
+	<span>THe above assumes that Speed = 0.5m/s, the forklift lift = 0.3m/s and each cell is 1.5 metres in length and height and that forklift starts on the left of the grid at position 1, 5</span><br />
+	</section>
+</body>
+
+
+
+<script>
+function generateChessBoard() {
+	output = '';
+	output += '<table>';
+
+	for (let x=1; x < 9; x++) {
+		output += '<tr>';
+		for (let y=1; y < 9; y++) {
+			output += '<td x="' + x + '" y="' + y + '"></td>';
+		}
+		output += '</tr>';
+	}
+	output += '</table>';
+
+	$('#board').append(output);
+}
+
+generateChessBoard();
+
+$(document).ready(function() {
+	$('#board table tr td').click(function() {
+		$('#board table tr td').each(function(index) {
+			$(this).text("");
+		});
+		
+		PosX = $(this).attr("x");
+		PosY = $(this).attr("y");
+
+		arrCurrPos = [];
+		arrCurrPos.push([PosX, PosY]);
+
+		$('#board table tr td').each(function(index) {
+			x = $(this).attr("x");
+			y = $(this).attr("y");
+
+			dist = tchebyshevDist(arrCurrPos[0], [x, y]);
+
+			if (dist == 0) {
+				$(this).text('K');
+			} else {
+				$(this).text(dist);
+			}
+		});
+	});
+
+	$('#warehouse table tr td').click(function() {
+		let speed = 0.5;
+		let lift = 0.3;
+		let LH = 1.5;
+
+		$('#warehouse table tr td').each(function(index) {
+			$(this).text("");
+			$(this).removeClass("active");
+		});
+		
+		PosX = $(this).attr("x");
+		PosY = $(this).attr("y");
+
+		$(this).addClass("active");
+
+		distPosY = (PosY * LH) / speed;
+		distPosX = (PosX * LH) / lift;
+		totalDist = distPosY + distPosX;
+
+		$('#result').text("X: " + distPosY + "s Y: " + distPosX + "s Total: " + totalDist + " seconds.");
+	});
+
+});
+
+function generateWarehouse() {
+	output = '';
+	output += '<table>';
+
+	for (let x=6; x > 0; x--) {
+		output += '<tr>';
+		for (let y=1; y < 10; y++) {
+			output += '<td x="' + x + '" y="' + y + '"></td>';
+		}
+		output += '</tr>';
+	}
+	output += '</table>';
+
+	$('#warehouse').append(output);
+}
+
+generateWarehouse();
+
+function tchebyshevDist(x, y) {
+	newX = Math.abs(x[0] - y[0]);
+	newY = Math.abs(x[1] - y[1]);
+
+	arrXY = [newX, newY]
+	return Math.max(...arrXY);
+}
+
+
+</script>
+
+</html>
+
