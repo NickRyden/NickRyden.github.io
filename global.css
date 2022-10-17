@@ -5,7 +5,7 @@
     --neutral: rgb(128,128,128);
     --light: rgb(242,242,242);
     --dark: rgb(42,42,42);
-    --color: rgb();
+    --color: rgb(112,41,99);
     --success: #00a908;
     --success-bg: #e5f6e6;
     --failed: #b81237;
@@ -37,4 +37,18 @@ body {
     color: var(--dark);
     animation: fadein 2s;
     overflow-x: hidden;
+}
+
+h1 { font-size: 1.8rem; font-weight: 600; }
+h2 { font-size: 1.3rem; font-weight: 400; }
+h3 { font-size: 1.25rem; font-weight: 400; }
+
+.section {
+	width: 100vw;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	padding: 3rem 1.5rem;
+	vertical-align: baseline;
 }
